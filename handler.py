@@ -70,10 +70,20 @@ def fetch_issue(issue_number: int) -> dict:
     return json.loads(result.stdout)
 
 
-def extract_task_id(title: str) -> str:
-    """Extract T-NNNN from issue title."""
+def extract_task_id(title: str, issue_number: int = 0) -> str:
+    """Extract task id from issue title with deterministic fallback.
+    
+    Priority:
+    1. T-NNNN in title → T-NNNN
+    2. Title starts with RFC → RFC-<issue_number>
+    3. Fallback → ISSUE-<issue_number>
+    """
     match = re.search(r"(T-\d+)", title)
-    return match.group(1) if match else "UNKNOWN"
+    if match:
+        return match.group(1)
+    if title.strip().upper().startswith("RFC"):
+        return f"RFC-{issue_number}"
+    return f"ISSUE-{issue_number}"
 
 
 def triage_issue(hook_data: dict, issue: dict) -> dict:
@@ -82,7 +92,7 @@ def triage_issue(hook_data: dict, issue: dict) -> dict:
     
     Returns ledger event dict.
     """
-    task_id = extract_task_id(issue["title"])
+    task_id = extract_task_id(issue["title"], issue.get("number", 0))
     participants = hook_data.get("participants", [])
     
     # Check if I'm a participant
@@ -226,7 +236,7 @@ def main():
     regenerate_views()
     
     # Commit and push
-    task_id = extract_task_id(issue["title"])
+    task_id = extract_task_id(issue["title"], issue.get("number", 0))
     commit_msg = f"{task_id}: {AGENT_NAME} automated triage (hook handler)"
     commit_and_push(commit_msg)
     
