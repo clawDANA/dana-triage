@@ -187,6 +187,9 @@ def commit_and_push(message: str):
         check=True
     )
     
+    # Pull latest to avoid push rejection
+    subprocess.run(["git", "pull", "--rebase", "origin", "main"], cwd=LEDGER_PATH, check=True)
+    
     # Add all changes
     subprocess.run(["git", "add", "-A"], cwd=LEDGER_PATH, check=True)
     
