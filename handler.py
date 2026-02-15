@@ -76,14 +76,14 @@ def extract_task_id(title: str, issue_number: int = 0) -> str:
     Priority:
     1. T-NNNN in title → T-NNNN
     2. Title starts with RFC → RFC-<issue_number>
-    3. Fallback → ISSUE-<issue_number>
+    3. Fallback → GH-<issue_number>
     """
     match = re.search(r"(T-\d+)", title)
     if match:
         return match.group(1)
     if title.strip().upper().startswith("RFC"):
         return f"RFC-{issue_number}"
-    return f"ISSUE-{issue_number}"
+    return f"GH-{issue_number}"
 
 
 def triage_issue(hook_data: dict, issue: dict) -> dict:
